@@ -1,8 +1,10 @@
 import os
 import sys
 
-# Add src to the path so we can run app.py directly easily
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add the project root to sys.path so 'src' can be imported easily from anywhere
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel

@@ -11,7 +11,7 @@ from .state import GraphState, Fact, NLIAnalysis
 
 # Initialize models
 # Assuming GOOGLE_API_KEY is in environment variables
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", temperature=0)
 
 # nli-deberta-v3-base outputs contradiction, entailment, neutral
 nli_model = CrossEncoder('cross-encoder/nli-deberta-v3-base')
