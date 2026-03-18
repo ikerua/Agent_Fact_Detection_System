@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import torch
 from typing import List, Dict, Any
 from langchain_core.prompts import PromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -13,8 +14,9 @@ from .state import GraphState, Fact, NLIAnalysis
 # Assuming GOOGLE_API_KEY is in environment variables
 llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", temperature=0)
 
-# nli-deberta-v3-base outputs contradiction, entailment, neutral
-nli_model = CrossEncoder('cross-encoder/nli-deberta-v3-base')
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Loading NLI model on device: {device.upper()}")
+nli_model = CrossEncoder('cross-encoder/nli-deberta-v3-base', device=device)
 
 class ExtractedFacts(BaseModel):
     facts: List[str] = Field(description="A list of standalone factual claims extracted from the raw transcript.")

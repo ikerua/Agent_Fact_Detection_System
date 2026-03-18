@@ -40,7 +40,7 @@ class TextRequest(BaseModel):
 
 # Initialize AudioExtractor at startup to load Whisper
 # You can change model size. 'base' takes ~1GB VRAM/RAM
-audio_extractor = AudioExtractor("base")
+audio_extractor = AudioExtractor("large-v3")
 
 # Build the LangGraph application
 graph_app = build_graph()
