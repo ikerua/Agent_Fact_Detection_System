@@ -1,12 +1,17 @@
 import os
 import sys
+import shutil
+from typing import Optional
 
 # Add the project root to sys.path so 'src' can be imported easily from anywhere
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -18,6 +23,14 @@ from src.agent_orchestrator.graph import build_graph
 from src.agent_orchestrator.state import GraphState
 
 app = FastAPI(title="Fact Detection System API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class URLRequest(BaseModel):
     url: str
@@ -32,16 +45,63 @@ audio_extractor = AudioExtractor("base")
 # Build the LangGraph application
 graph_app = build_graph()
 
-@app.post("/process_url")
-async def process_url_endpoint(request: URLRequest):
+@app.post("/transcribe_only")
+async def transcribe_only_endpoint(
+    url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None)
+):
     """
-    Endpoint to process a video URL through the entire pipeline.
+    Endpoint to transcribe either a video URL or an uploaded audio/video file.
     """
     try:
-        # Phase 1: Download & Transcribe
-        print(f"Processing URL: {request.url}")
-        transcript = audio_extractor.process_url(request.url)
-        
+        if file:
+            print(f"Transcribing uploaded file: {file.filename}")
+            os.makedirs("downloads", exist_ok=True)
+            file_path = os.path.join("downloads", file.filename)
+            
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+                
+            transcript = audio_extractor.transcribe(file_path)
+            
+            return {"transcript": transcript}
+            
+        elif url:
+            print(f"Transcribing URL: {url}")
+            transcript = audio_extractor.process_url(url)
+            
+            return {"transcript": transcript}
+            
+        else:
+            raise HTTPException(status_code=400, detail="Debes proporcionar una URL o subir un archivo de audio/video.")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/process_url")
+async def process_url_endpoint(
+    url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None)
+):
+    """
+    Endpoint to process a video URL or audio File through the entire pipeline.
+    """
+    try:
+        if file:
+            print(f"Processing uploaded file: {file.filename}")
+            os.makedirs("downloads", exist_ok=True)
+            file_path = os.path.join("downloads", file.filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            transcript = audio_extractor.transcribe(file_path)
+            
+        elif url:
+            print(f"Processing URL: {url}")
+            transcript = audio_extractor.process_url(url)
+            
+        else:
+            raise HTTPException(status_code=400, detail="Debes proporcionar una URL o subir un archivo.")
+
         # Phase 2 & 3: Fact Checking Pipeline
         print("Starting Agent Ecosystem...")
         initial_state = {
@@ -85,6 +145,16 @@ async def analyze_text_endpoint(request: TextRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if not os.path.exists(static_path):
+    os.makedirs(static_path)
+
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+@app.get("/")
+async def serve_frontend():
+    return FileResponse(os.path.join(static_path, "index.html"))
 
 if __name__ == "__main__":
     import uvicorn

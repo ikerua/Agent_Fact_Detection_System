@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Fact Detection System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="container glass-panel">
+        <header>
+            <h1>Fact<span>X</span> Agent</h1>
+            <p>AI-Powered Audio Extraction & Fact Checking Ecosystem</p>
+        </header>
+
+        <main>
+            <!-- Input Type Switcher -->
+            <div class="tab-switcher">
+                <button class="tab-btn active" data-tab="url-tab">🔗 Media URL</button>
+                <button class="tab-btn" data-tab="file-tab">📁 Upload File</button>
+            </div>
+
+            <!-- Forms -->
+            <form id="ingestion-form">
+                
+                <div id="url-tab" class="input-section active">
+                    <input type="url" id="media-url" placeholder="Paste YouTube, TikTok or Media URL here..." autocomplete="off">
+                </div>
+
+                <div id="file-tab" class="input-section">
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="media-file" accept="audio/*,video/*">
+                        <div class="file-upload-visuals">
+                            <span class="upload-icon">⬆️</span>
+                            <span id="file-name-display">Click or drag an Audio/Video file</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" id="btn-transcribe">
+                        <span>📝 Transcribe Only</span>
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btn-factcheck">
+                        <span>🕵️ Full Fact Check</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden">
+                <div class="spinner"></div>
+                <p id="loading-text">Agents are analyzing the media...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="hidden">
+                <div class="results-header">
+                    <h2>Analysis Results</h2>
+                </div>
+                
+                <div class="transcript-box">
+                    <h3>Raw Transcript</h3>
+                    <div id="transcript-content" class="content-scroll"></div>
+                </div>
+
+                <div id="facts-container" class="hidden">
+                    <h3>Fact Checking Evaluation</h3>
+                    <div id="facts-list"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

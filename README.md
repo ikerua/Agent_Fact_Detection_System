@@ -56,4 +56,11 @@ python src/app.py
   Body `{"transcript": "<raw_text>"}`
   Directly runs the fact-checking agent on provided text.
 
+- **POST /transcribe_only**  
+  *(Form-Data Request)*  
+  Puedes enviar **una de las siguientes opciones**:
+  - Parámetro de texto `url`: `<youtube_or_video_url>`
+  - Archivo adjunto `file`: Sube directamente un MP3, WAV, MP4, etc.  
+  Descarga el audio de la URL o directamente lee el archivo pasándole el contenido al transcriptor local, omitiendo los agentes NLI.
+
 The API runs by default on http://localhost:8000. You can visit http://localhost:8000/docs for the Swagger UI interface.

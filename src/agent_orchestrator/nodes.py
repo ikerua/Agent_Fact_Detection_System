@@ -66,7 +66,7 @@ def search_brave_node(state: GraphState) -> GraphState:
         
         if not brave_api_key:
             # Mock search or warning if API key is not provided
-            search_results[claim_id] = [f"Mock search result for: {claim_text}. Setup BRAVE_API_KEY."]
+            search_results[claim_id] = [{"snippet": f"Mock search result for: {claim_text}. Setup BRAVE_API_KEY.", "url": "#"}]
             continue
             
         params = {"q": claim_text}
@@ -78,8 +78,8 @@ def search_brave_node(state: GraphState) -> GraphState:
             snippets = []
             if "web" in search_data and "results" in search_data["web"]:
                 for page in search_data["web"]["results"][:3]: # Take top 3
-                    if "description" in page:
-                        snippets.append(page["description"])
+                    if "description" in page and "url" in page:
+                        snippets.append({"snippet": page["description"], "url": page["url"]})
             search_results[claim_id] = snippets
         except Exception as e:
             print(f"Error searching for '{claim_text}': {e}")
@@ -103,9 +103,17 @@ def evaluate_nli_node(state: GraphState) -> GraphState:
     for fact in facts:
         claim_id = fact["id"]
         claim_text = fact["claim"]
-        snippets = search_results.get(claim_id, [])
+        search_items = search_results.get(claim_id, [])
         
-        for snippet in snippets:
+        votes = {"contradiction": 0, "entailment": 0, "neutral": 0}
+        urls = []
+        
+        for item in search_items:
+            snippet = item["snippet"]
+            url = item["url"]
+            if url and url not in urls and url != "#":
+                urls.append(url)
+                
             # Prepare pair: Premise is snippet, Hypothesis is claim
             pair = (snippet, claim_text) 
             scores = nli_model.predict([pair])[0]
@@ -113,13 +121,20 @@ def evaluate_nli_node(state: GraphState) -> GraphState:
             # Get the predicted label (argmax)
             predicted_class_id = scores.argmax()
             predicted_label = label_mapping.get(predicted_class_id, "unknown")
+            if predicted_label in votes:
+                votes[predicted_label] += 1
+                
+        # Calculate majority vote
+        if votes["entailment"] == 0 and votes["contradiction"] == 0 and votes["neutral"] == 0:
+            final_label = "unknown"
+        else:
+            final_label = max(votes, key=votes.get)
             
-            analysis.append(NLIAnalysis(
-                claim_id=claim_id,
-                claim=claim_text,
-                snippet=snippet,
-                score=float(scores[predicted_class_id]),
-                label=predicted_label
-            ))
+        analysis.append(NLIAnalysis(
+            claim_id=claim_id,
+            claim=claim_text,
+            urls=urls,
+            label=final_label
+        ))
             
     return {"final_nli_analysis": analysis}

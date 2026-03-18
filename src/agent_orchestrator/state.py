@@ -4,15 +4,18 @@ class Fact(TypedDict):
     id: int
     claim: str
 
+class SearchResult(TypedDict):
+    snippet: str
+    url: str
+
 class NLIAnalysis(TypedDict):
     claim_id: int
     claim: str
-    snippet: str
-    score: float
+    urls: List[str]
     label: str
 
 class GraphState(TypedDict):
     raw_transcript: str
     extracted_facts: List[Fact]
-    search_results: Dict[int, List[str]]
+    search_results: Dict[int, List[SearchResult]]
     final_nli_analysis: List[NLIAnalysis]
