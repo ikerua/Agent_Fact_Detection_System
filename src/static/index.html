@@ -23,6 +23,7 @@
             <div class="tab-switcher">
                 <button class="tab-btn active" data-tab="url-tab">🔗 Media URL</button>
                 <button class="tab-btn" data-tab="file-tab">📁 Upload File</button>
+                <button class="tab-btn" data-tab="record-tab">🎤 Record Audio</button>
             </div>
 
             <!-- Forms -->
@@ -39,6 +40,17 @@
                             <span class="upload-icon">⬆️</span>
                             <span id="file-name-display">Click or drag an Audio/Video file</span>
                         </div>
+                    </div>
+                </div>
+
+                <div id="record-tab" class="input-section">
+                    <div class="record-wrapper" style="text-align: center; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--panel-border);">
+                        <button type="button" id="btn-record" class="btn btn-secondary" style="border-radius: 50px; padding: 15px 30px; font-size: 1.2rem; display: inline-flex; align-items: center; gap: 10px; margin-bottom: 15px; border: 2px solid transparent; transition: all 0.3s;">
+                            <span id="record-icon">🔴</span>
+                            <span id="record-text">Start Recording</span>
+                        </button>
+                        <div id="record-status" style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.95rem;">Microphone ready</div>
+                        <audio id="audio-playback" controls style="display: none; margin: 0 auto; width: 100%; max-width: 400px; outline: none; border-radius: 8px;"></audio>
                     </div>
                 </div>
 

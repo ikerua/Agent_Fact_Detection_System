@@ -13,7 +13,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const factsList = document.getElementById("facts-list");
     const loadingText = document.getElementById("loading-text");
 
-    let activeInputType = "url"; // 'url' or 'file'
+    // Audio Recording Elements
+    const btnRecord = document.getElementById("btn-record");
+    const recordStatus = document.getElementById("record-status");
+    const audioPlayback = document.getElementById("audio-playback");
+    const recordIcon = document.getElementById("record-icon");
+    const recordText = document.getElementById("record-text");
+
+    let activeInputType = "url"; // 'url', 'file', or 'record'
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordedAudioBlob = null;
 
     // Tab Switching
     tabs.forEach(tab => {
@@ -22,7 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
             sections.forEach(s => s.classList.remove("active"));
             
             tab.classList.add("active");
-            activeInputType = tab.dataset.tab === "url-tab" ? "url" : "file";
+            if (tab.dataset.tab === "url-tab") {
+                activeInputType = "url";
+            } else if (tab.dataset.tab === "file-tab") {
+                activeInputType = "file";
+            } else if (tab.dataset.tab === "record-tab") {
+                activeInputType = "record";
+            }
             document.getElementById(tab.dataset.tab).classList.add("active");
         });
     });
@@ -35,6 +51,53 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             fileNameDisplay.textContent = "Click or drag an Audio/Video file";
             fileNameDisplay.style.color = "var(--text-secondary)";
+        }
+    });
+
+    // Audio Recording Logic
+    btnRecord.addEventListener("click", async () => {
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(recordedAudioBlob);
+                    audioPlayback.src = audioUrl;
+                    audioPlayback.style.display = "block";
+                    recordStatus.textContent = "Recording finished. Ready to process.";
+                    recordStatus.style.color = "var(--secondary)";
+                    
+                    // Stop all tracks to release microphone
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                recordIcon.textContent = "⏹️";
+                recordText.textContent = "Stop Recording";
+                btnRecord.style.borderColor = "var(--contradiction-border)";
+                recordStatus.textContent = "Recording in progress...";
+                recordStatus.style.color = "var(--contradiction-border)";
+                audioPlayback.style.display = "none";
+                recordedAudioBlob = null;
+
+            } catch (err) {
+                console.error("Error accessing microphone:", err);
+                alert("Microphone access denied or not available. " + err.message);
+            }
+        } else if (mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+            recordIcon.textContent = "🔴";
+            recordText.textContent = "Record Again";
+            btnRecord.style.borderColor = "transparent";
         }
     });
 
@@ -55,13 +118,20 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please select a file to upload");
             return;
         }
+        if (activeInputType === "record" && !recordedAudioBlob) {
+            alert("Please record some audio first");
+            return;
+        }
 
         // Prepare Data
         const formData = new FormData();
         if (activeInputType === "url") {
             formData.append("url", urlValue);
-        } else {
+        } else if (activeInputType === "file") {
             formData.append("file", fileValue);
+        } else if (activeInputType === "record") {
+            // Give it a generic filename so the backend can process it as an uploaded file
+            formData.append("file", recordedAudioBlob, "recorded_audio.webm");
         }
 
         // UI Updates

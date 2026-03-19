@@ -11,7 +11,7 @@ from sentence_transformers import CrossEncoder
 from .state import GraphState, Fact, NLIAnalysis
 
 # Initialize models
-# Assuming GOOGLE_API_KEY is in environment variables
+
 llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", temperature=0)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

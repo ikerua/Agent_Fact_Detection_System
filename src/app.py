@@ -9,7 +9,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -151,6 +151,10 @@ if not os.path.exists(static_path):
     os.makedirs(static_path)
 
 app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(content=b"", media_type="image/x-icon")
 
 @app.get("/")
 async def serve_frontend():
