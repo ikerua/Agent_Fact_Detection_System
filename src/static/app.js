@@ -55,9 +55,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Audio Recording Logic
-    btnRecord.addEventListener("click", async () => {
+    btnRecord.addEventListener("click", async (e) => {
+        e.preventDefault();
+        
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
             try {
+                // Check if browser supports mediaDevices
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Tu navegador no soporta grabación o estás usando HTTP sin localhost. Usa HTTPS o abrelo en localhost.");
+                }
+
+                recordStatus.textContent = "Solicitando permisos de micrófono...";
+                recordStatus.style.color = "var(--text-secondary)";
+
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
@@ -69,7 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
 
                 mediaRecorder.onstop = () => {
-                    recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    // Save as closest possible mimeType that is acceptable.
+                    // Instead of enforcing 'audio/webm', let browser use its default audio mimeType.
+                    const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                    recordedAudioBlob = new Blob(audioChunks, { type: mimeType });
+                    
                     const audioUrl = URL.createObjectURL(recordedAudioBlob);
                     audioPlayback.src = audioUrl;
                     audioPlayback.style.display = "block";
@@ -91,7 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (err) {
                 console.error("Error accessing microphone:", err);
-                alert("Microphone access denied or not available. " + err.message);
+                alert("Error con el micrófono: " + err.message);
+                recordStatus.textContent = "Error de micrófono";
+                recordStatus.style.color = "var(--contradiction-border)";
             }
         } else if (mediaRecorder.state === "recording") {
             mediaRecorder.stop();
