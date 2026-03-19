@@ -1,0 +1,28 @@
+[project]
+name = "nlp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gensim",
+    "nltk",
+    "scikit-learn",
+    "matplotlib",
+    "seaborn",
+    "numpy",
+    "scipy",
+    "pyevall>=0.1.78",
+    "jupyter>=1.1.1",
+    "lab>=8.8",
+    "optuna>=4.7.0",
+    "mlflow>=3.10.0",
+    "yt-dlp>=2026.3.17",
+    "torch>=2.10.0",
+    "torchaudio>=2.10.0",
+    "langgraph>=1.1.2",
+    "langchain-google-genai>=4.2.1",
+    "sentence-transformers>=5.3.0",
+    "openai-whisper>=20250625",
+    "python-multipart>=0.0.22",
+]
